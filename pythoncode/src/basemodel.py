@@ -24,18 +24,23 @@ V = TypeVar("V")
 S = TypeVar("S")
 
 class Capa(Generic[V]):
-    items:list[Articulo] = []
-    subcapas:dict = {}
     def __init__(self,value:V|None = None,index:int|None = None):
         self.value = value
         self.index = index
+        self.items:list[Articulo] = []
+        self.subcapas:dict = {}
         
     def __repr__(self):
         return f"Capa<{V.__name__}>(index:{self.index},items:{self.items},sub:{self.subcapas})"
 
 class Segmento(basicIdentificated):
-    familias:list[Familia]=[]
-class Familia(basicIdentificated): pass
-class Clase(basicIdentificated): pass
+    def __ini__(self):
+        self.familias:list[Familia]=[]
+class Familia(basicIdentificated):
+    def __ini__(self):
+            self.clases:list[Clase]=[]
+class Clase(basicIdentificated):
+    def __ini__(self):
+            self.articulos:list[Articulo]=[]
 class Articulo(basicIdentificated): pass
 
