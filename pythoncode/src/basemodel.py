@@ -7,6 +7,14 @@ import psycopg2
 class Clasificacion(BaseModel):
     id_articulo: int
     id_grupo: int
+    motivo:str
+    confianza: float
+    
+class Recomendacion(BaseModel):
+    id_articulo: int
+    descripcion_detallada_articulo:str
+    id_grupo: int
+    motivo:str
     confianza: float
     
 class basicIdentificated():
@@ -41,6 +49,6 @@ class Familia(basicIdentificated):
             self.clases:list[Clase]=[]
 class Clase(basicIdentificated):
     def __ini__(self):
-            self.articulos:list[Articulo]=[]
+            self.productos:list[Articulo]=[]
 class Articulo(basicIdentificated): pass
 
