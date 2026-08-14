@@ -1,0 +1,72 @@
+@import "./reset.css";
+:root {
+	--size-xs: 0.25rem; /*4*/
+	--size-s: 0.5rem; /*8*/
+	--size-m: 1rem; /*16*/
+	--size-l: 1.5rem; /*24*/
+	--size-xl: 2rem; /*32*/
+
+	--font-size-m: 1rem;
+	--font-size-l: 1.2rem;
+
+	--border-l: 1px solid;
+	--border-color-auto: oklch(from currentColor 0.7 c h);
+
+	--l-1: 0.2;
+	--l-2: 0.5;
+	--l-3: 0.7;
+	--l-4: 0.9;
+	--l-5: 0.95;
+}
+html {
+	font-size: 16px;
+	max-width: 100vw;
+	overflow-x: hidden;
+}
+h1 {
+	text-align: center;
+	font-size: var(--size-l);
+}
+nav {
+	font-size: var(--size-m);
+	background: gold;
+}
+
+button,
+input,
+textarea {
+	outline: none;
+	border: none;
+}
+textarea {
+	resize: none;
+	background: none;
+}
+label:has(> input) {
+	padding: var(--size-xs) var(--size-s);
+	border-radius: var(--size-m);
+    &:hover{
+        background-color: oklch(from currentColor var(--l-5) c h);
+    }
+	&.borded:has(> input:checked) {
+		background-color: oklch(from currentColor var(--l-5) c h);
+		outline: var(--border-l);
+		outline-color: var(--border-color-auto);
+	}
+}
+input[type="radio"],
+input[type="checkbox"] {
+	&:not(.reset) {
+		appearance: none;
+	}
+}
+
+button {
+	padding: var(--size-xs) var(--size-m);
+	border: 0.5px solid oklch(from currentColor calc(0.7) c h);
+	border-radius: var(--size-m);
+	&:focus {
+		border-color: oklch(from currentColor var(--l-2) c h);
+		border: 1px solid;
+	}
+}
