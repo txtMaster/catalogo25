@@ -9,12 +9,12 @@ export interface IArticulo {
 	descripcion?: string;
 }
 
-export interface Clasificacion {
+export type Clasificacion = {
 	articulo: IArticulo;
-	segmento?: Seleccion<ISegmento>;
-	familia?: Seleccion<IFamilia>;
-	clase?: Seleccion<IClase>;
-	producto?: Seleccion<IClase>;
+	segmento: Seleccion<ISegmento|null>;
+	familia: Seleccion<IFamilia|null>;
+	clase: Seleccion<IClase|null>;
+	producto: Seleccion<IProducto|null>;
 }
 
 export interface Seleccion<T> {

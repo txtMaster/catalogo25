@@ -47,7 +47,8 @@
 			column-gap: var(--padding);
 			padding: var(--padding);
 			border-radius: inherit;
-			border: var(--border-l);
+			border-width: var(--border-l);
+			border-style: solid;
 			border-color: oklch(from currentColor var(--l-3) c h);
 			isolation: isolate;
 			label {
@@ -57,6 +58,9 @@
 				border-radius: inherit;
 				justify-content: center;
 				box-sizing: border-box;
+				&:has(input:checked) {
+					background: none;
+				}
 			}
 			&::before {
 				transition: left 0.2s;
@@ -74,7 +78,7 @@
 				height: calc(100% - var(--line-padding));
 				width: var(--option-size);
 			}
-		&:has(input:focus-within) {
+			&:has(input:focus-within) {
 				border-color: oklch(from currentColor var(--l-2) c h);
 			}
 		}
