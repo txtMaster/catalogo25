@@ -52,3 +52,44 @@ export async function cargarExcel(
 
 	return datos;
 }
+
+export function getTestArticles() {
+	return [
+		{
+			articulo: {
+				id: "adwa",
+				nombre: "Pollo a la brasa",
+				descripcion: "nose que poner aa aaaa",
+			},
+			segmento: {
+				motivo: "porque esta muy bonito",
+				confianza: 0.9,
+				eleccion: new Segmento("500000", "segmento", []),
+			},
+			familia: {
+				eleccion: new Familia("", "familia"),
+			},
+			clase: {
+				eleccion: new Clase("", "clase"),
+			},
+			producto: {
+				eleccion: new Producto("", "producto"),
+			},
+		},
+		{
+			articulo: {
+				id: "adwa2",
+				nombre: "Tallarin saltado",
+				descripcion: "nose que poner aa aaaa",
+			},
+			segmento: {
+				motivo: "porque esta muy bonito",
+				confianza: 0.9,
+				eleccion: new Segmento("500000", "segmento", []),
+			},
+			familia: {},
+			clase: {},
+			producto: {},
+		},
+	];
+}

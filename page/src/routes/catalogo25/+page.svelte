@@ -8,11 +8,12 @@
 	import { Familia } from "$lib/models/Familia";
 	import { Clase } from "$lib/models/Clase";
 	import { Producto } from "$lib/models/Producto";
-	import { agruparFaltantes, cargarExcel } from "$lib/temp";
+	import { agruparFaltantes, cargarExcel, getTestArticles } from "$lib/temp";
+	const filters = ["Encontrados", "Dudosos", "Desconocidos"];
+	let currFilter = $state<string>("");
 	async function cargarArticulos(e: Event) {
 		articulos = [];
 		const datos = await cargarExcel(e);
-		console.log(datos);
 		datos.forEach((row) => {
 			if (!row?.id || !row?.nombre) return;
 			const { id, nombre, descripcion, segmento, familia, clase, producto } =
@@ -51,48 +52,19 @@
 			articulos.push(clasificacion);
 		});
 	}
-	let articulos = $state<Clasificacion[]>([
-		{
-			articulo: {
-				id: "adwa",
-				nombre: "Pollo a la brasa",
-				descripcion: "nose que poner aa aaaa",
-			},
-			segmento: {
-				motivo: "porque esta muy bonito",
-				confianza: 0.9,
-				eleccion: new Segmento("500000", "segmento", []),
-			},
-			familia: {
-				eleccion: new Familia("", "familia"),
-			},
-			clase: {
-				eleccion: new Clase("", "clase"),
-			},
-			producto: {
-				eleccion: new Producto("", "producto"),
-			},
-		},
-		{
-			articulo: {
-				id: "adwa2",
-				nombre: "Pollo a la brasa",
-				descripcion: "nose que poner aa aaaa",
-			},
-			segmento: {
-				motivo: "porque esta muy bonito",
-				confianza: 0.9,
-				eleccion: new Segmento("500000", "segmento", []),
-			},
-			familia: {},
-			clase: {},
-			producto: {},
-		},
-	]);
+	let articulos = $state<Clasificacion[]>(getTestArticles());
 	function deleteArticle(i: number) {
 		if (i !== -1) articulos.splice(i, 1);
 	}
-	let faltantes = $derived(agruparFaltantes(articulos));
+	let grupos = $derived(agruparFaltantes(articulos));
+	let grupoActual = $derived(
+		currFilter === "Encontrados"
+			? grupos.productos
+			: currFilter === "Desconocidos"
+				? grupos.vacios
+				: [...grupos.clases, ...grupos.familias, ...grupos.segmentos],
+	);
+	$effect(() => {});
 </script>
 
 <PageHeader title="CODIGOS DE SUNAT" />
@@ -111,21 +83,22 @@
 			<button class="borded">Descargar Resultados</button>
 		</div>
 		<RadioGroup
-			options={["Encontrados", "Dudosos", "Desconocido"]}
+			options={filters}
 			title="mostrar articulos"
+			bind:value={currFilter}
 		/>
 	</section>
 	<section>
 		<div class="resumen">
-			<div>vacios: {faltantes.vacios.length}</div>
-			<div>hasta segmentos: {faltantes.segmentos.length}</div>
-			<div>hasta familias: {faltantes.familias.length}</div>
-			<div>hasta clases: {faltantes.clases.length}</div>
-			<div>clasificados: {faltantes.productos.length}</div>
+			<div>vacios: {grupos.vacios.length}</div>
+			<div>hasta segmentos: {grupos.segmentos.length}</div>
+			<div>hasta familias: {grupos.familias.length}</div>
+			<div>hasta clases: {grupos.clases.length}</div>
+			<div>clasificados: {grupos.productos.length}</div>
 		</div>
 	</section>
 	<section class="table">
-		{#each articulos as clasificacion, i}
+		{#each grupoActual as clasificacion, i}
 			<Articulo {clasificacion} onDelete={() => deleteArticle(i)} />
 		{/each}
 	</section>

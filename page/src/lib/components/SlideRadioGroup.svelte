@@ -2,9 +2,13 @@
 	interface Props {
 		options: Array<string>;
 		title: string;
+		value: string;
 	}
-	let { title, options }: Props = $props();
-	let position = $state(0);
+	let { title, options, value = $bindable() }: Props = $props();
+	let position = $state<number>(0);
+	$effect(() => {
+		value = options[position];
+	});
 </script>
 
 <div class="radio-group">
