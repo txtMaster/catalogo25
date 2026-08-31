@@ -1,24 +1,28 @@
 <script lang="ts">
-	interface Props {
+	import type { withClass } from "./componentTypes";
+
+	let {
+		name,
+		title,
+		options,
+		position = $bindable(0),
+		class:className=""
+	}: withClass & {
 		options: Array<string>;
 		title: string;
-		value: string;
-	}
-	let { title, options, value = $bindable() }: Props = $props();
-	let position = $state<number>(0);
-	$effect(() => {
-		value = options[position];
-	});
+		position: number;
+		name: string;
+	} = $props();
 </script>
 
-<div class="radio-group">
+<div class={"radio-group " + className}>
 	<div class="title">{title}</div>
 	<section class="options" style:--i={position} style:--list={options.length}>
 		{#each options as option, i}
 			<label>
 				{option.trim()}<input
 					type="radio"
-					name="tipo"
+					{name}
 					value={i}
 					bind:group={position}
 				/>

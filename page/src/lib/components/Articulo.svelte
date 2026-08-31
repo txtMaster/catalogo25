@@ -1,17 +1,15 @@
 <script lang="ts">
-	import type {
-		Clasificacion,
-		IArticulo,
-		Seleccion,
+	import {
+		limpiarSeleccion,
+		type Clasificacion,
+		type Seleccion,
 	} from "$lib/interfaces/IArticulo";
-	import type { ISegmento } from "$lib/interfaces/ISegmento";
-	import type { IFamilia } from "$lib/interfaces/IFamilia";
-	import type { IClase } from "$lib/interfaces/IClase";
 	import { floatToPercentage } from "$lib/utils/numberUtils";
 	import RadioInput from "./RadioInput.svelte";
 	import { Segmento } from "$lib/models/Segmento";
 	import { Familia } from "$lib/models/Familia";
 	import { Clase } from "$lib/models/Clase";
+	import ListRadioGroup from "./ListRadioGroup.svelte";
 	interface Props {
 		clasificacion: Clasificacion;
 		onDelete?: () => any;
@@ -22,13 +20,20 @@
 	let motivoActual = $state("");
 	let editable = $state(false);
 	const name = $derived("clasificacion-" + cls.articulo.id);
-
-	$effect(() => {
-		descripcion = cls.articulo?.descripcion ?? "";
-	});
-	$effect(() => {
-		motivoActual = seleccion?.motivo ?? "";
-	});
+	const labels = $derived([
+		`Segmento: ${cls.segmento?.eleccion?.nombre ?? ""}`,
+		`Familia: ${cls.familia?.eleccion?.nombre ?? ""}`,
+		`Clase: ${cls.clase?.eleccion?.nombre ?? ""}`,
+		`Producto: ${cls.producto?.eleccion?.nombre ?? ""}`,
+	]);
+	const options = $derived([
+		cls?.segmento,
+		cls?.familia,
+		cls?.clase,
+		cls?.producto,
+	]);
+	$effect((): any => (descripcion = cls.articulo?.descripcion ?? ""));
+	$effect((): any => (motivoActual = seleccion?.motivo ?? ""));
 	$effect(() => {
 		if (editable) return;
 		cls.articulo.descripcion = descripcion;
@@ -39,22 +44,20 @@
 			? `(confianza ${floatToPercentage(seleccion?.confianza ?? 0)})`
 			: "",
 	);
-	function limpiarSeleccion(sl: Seleccion<any>) {
-		if(!sl) return;
+	function limpiarJerarquia(sl: Seleccion<any>) {
+		if (!sl) return;
 		const { eleccion } = sl;
-		if (eleccion instanceof Segmento) limpiarSeleccion(cls.familia);
-		else if(eleccion instanceof Familia) limpiarSeleccion(cls.clase);
-		else if(eleccion instanceof Clase) limpiarSeleccion(cls.producto);
-		sl.confianza = undefined;
-		sl.motivo = undefined;
-		sl.eleccion = undefined;
+		if (eleccion instanceof Segmento) limpiarJerarquia(cls.familia);
+		else if (eleccion instanceof Familia) limpiarJerarquia(cls.clase);
+		else if (eleccion instanceof Clase) limpiarJerarquia(cls.producto);
+		limpiarSeleccion(sl);
 	}
 </script>
 
 <article class="articulo">
 	<div class="left">
 		<div class="header">
-			<span class="nombre">{cls?.articulo.nombre}</span>
+			<span class="nombre">{cls?.articulo.nombre +" - "+ cls.articulo.id}</span>
 		</div>
 		<label class="descripcion">
 			<input
@@ -75,44 +78,17 @@
 		</label>
 	</div>
 	<div class="right">
-		<RadioInput
-			{name}
-			value={cls?.segmento}
-			bind:group={seleccion}
-			class="radiobutton"
-			onClear={() => {
-				limpiarSeleccion(cls.segmento);
-			}}
-		>
-			Segmento: {cls?.segmento?.eleccion?.nombre}
-		</RadioInput>
-		<RadioInput
-			{name}
-			value={cls?.familia}
-			bind:group={seleccion}
-			class="radiobutton"
-			onClear={() => limpiarSeleccion(cls.familia)}
-		>
-			Familia: {cls?.familia?.eleccion?.nombre}
-		</RadioInput>
-		<RadioInput
-			bind:group={seleccion}
-			value={cls?.clase}
-			{name}
-			class="radiobutton"
-			onClear={() => limpiarSeleccion(cls.clase)}
-		>
-			Clase: {cls.clase?.eleccion?.nombre}
-		</RadioInput>
-		<RadioInput
-			bind:group={seleccion}
-			value={cls?.producto}
-			{name}
-			class="radiobutton"
-			onClear={() => limpiarSeleccion(cls.producto)}
-		>
-			Producto: {cls?.producto?.eleccion?.nombre}
-		</RadioInput>
+		{#each options as option, i}
+			<RadioInput
+				bind:group={seleccion}
+				value={option}
+				{name}
+				class="radiobutton"
+				onClear={() => limpiarJerarquia(option)}
+			>
+				{labels?.[i]}
+			</RadioInput>
+		{/each}
 	</div>
 	<div class="buttons">
 		<label class="borded large">

@@ -1,116 +1,113 @@
 <script lang="ts">
-	import type { Clasificacion, IArticulo } from "$lib/interfaces/IArticulo";
+	import type { Clasificacion } from "$lib/interfaces/IArticulo";
 	import "$lib/components/PageHeader.svelte";
 	import PageHeader from "$lib/components/PageHeader.svelte";
-	import RadioGroup from "$lib/components/SlideRadioGroup.svelte";
 	import Articulo from "$lib/components/Articulo.svelte";
-	import { Segmento } from "$lib/models/Segmento";
-	import { Familia } from "$lib/models/Familia";
-	import { Clase } from "$lib/models/Clase";
-	import { Producto } from "$lib/models/Producto";
-	import { agruparFaltantes, cargarExcel, getTestArticles } from "$lib/temp";
+	import { SvelteSet } from "svelte/reactivity";
+	import {
+		agruparFaltantes,
+		cargarArticulosDeExcel,
+		getTestArticles,
+	} from "$lib/temp";
+	import FiltroArticulos from "$lib/components/FiltroArticulos.svelte";
+	import ArticuloResultados from "$lib/components/ArticuloResultados.svelte";
+	import ClasificacionButtonDownload from "$lib/components/ClasificacionButtonDownload.svelte";
 	const filters = ["Encontrados", "Dudosos", "Desconocidos"];
-	let currFilter = $state<string>("");
-	async function cargarArticulos(e: Event) {
-		articulos = [];
-		const datos = await cargarExcel(e);
-		datos.forEach((row) => {
-			if (!row?.id || !row?.nombre) return;
-			const { id, nombre, descripcion, segmento, familia, clase, producto } =
-				row;
-			const clasificacion: Clasificacion = {
-				articulo: {
-					id,
-					nombre,
-					descripcion,
-				},
-				segmento: {},
-				familia: {},
-				clase: {},
-				producto: {},
-			};
-			if (segmento)
-				clasificacion.segmento = {
-					confianza: 1,
-					eleccion: new Segmento(String(row.segmento), "segmento", []),
-				};
-			if (familia)
-				clasificacion.familia = {
-					confianza: 1,
-					eleccion: new Familia(String(row.familia), "familia", []),
-				};
-			if (clase)
-				clasificacion.clase = {
-					confianza: 1,
-					eleccion: new Clase(String(row.clase), "clase", []),
-				};
-			if (producto)
-				clasificacion.producto = {
-					confianza: 1,
-					eleccion: new Producto(String(row.producto), "producto"),
-				};
-			articulos.push(clasificacion);
+	const views = ["Articulo", "Tabla", "Agrupado"];
+	let indexFilter = $state<number>(0);
+	let currFilter = $derived(filters?.[indexFilter]);
+	let pais = $state("");
+	let rubro = $state("");
+	async function cargarArticulos(e?: Event) {
+		articulos = {};
+		ordenArticulos.clear()
+
+		let newArticles = [];
+		if (e) {
+			newArticles = await cargarArticulosDeExcel(e);
+		} else {
+			newArticles = getTestArticles();
+		}
+		newArticles.forEach((cls) => {
+			ordenArticulos.add(cls.articulo.id);
+			articulos[cls.articulo.id] = cls;
 		});
 	}
-	let articulos = $state<Clasificacion[]>(getTestArticles());
-	function deleteArticle(i: number) {
-		if (i !== -1) articulos.splice(i, 1);
+	let ordenArticulos: Set<string> = new SvelteSet();
+	let articulos = $state<{[key:string]:Clasificacion}>({});
+	cargarArticulos();
+	function deleteArticle(i: string) {
+		if (!articulos[i]) return;
+		delete articulos[i];
+		ordenArticulos.delete(i);
 	}
-	let grupos = $derived(agruparFaltantes(articulos));
+
+	let grupos = $derived(agruparFaltantes(articulos, ordenArticulos));
+	let grupoDudosos = $derived(
+		new SvelteSet([...grupos.clases, ...grupos.familias, ...grupos.segmentos]),
+	);
 	let grupoActual = $derived(
 		currFilter === "Encontrados"
 			? grupos.productos
 			: currFilter === "Desconocidos"
 				? grupos.vacios
-				: [...grupos.clases, ...grupos.familias, ...grupos.segmentos],
+				: grupoDudosos,
 	);
-	$effect(() => {});
 </script>
 
 <PageHeader title="CODIGOS DE SUNAT" />
-<section class="selector"></section>
-<section class="main">
-	<section class="filtros">
-		<div class="left">
-			<label class="borded file">
+<section class="selector">
+	<div class="top flex between">
+		<div class="contexto flex col grow">
+			<h3>DATOS Y CONTEXTO</h3>
+			<label
+				>Pais:
+				<input type="text" bind:value={pais} />
+			</label>
+			<label
+				>Rubro:
+				<input type="text" bind:value={rubro} />
+			</label>
+		</div>
+		<div class="carga h-fit">
+			<label class="file link">
 				<input
+					class="hide"
 					type="file"
 					accept=".xlsx,.xls,.ods"
 					onchange={cargarArticulos}
 				/>
 				Leer Excel
 			</label>
-			<button class="borded">Descargar Resultados</button>
+			<ClasificacionButtonDownload clasificaciones={articulos}/>
 		</div>
-		<RadioGroup
-			options={filters}
-			title="mostrar articulos"
-			bind:value={currFilter}
+	</div>
+	<div class="resultados">
+		<ArticuloResultados
+			sinDescripcion={grupos.sinDescripcion}
+			vacios={grupos.vacios}
+			segmentos={grupos.segmentos}
+			familias={grupos.familias}
+			clases={grupos.clases}
 		/>
-	</section>
-	<section>
-		<div class="resumen">
-			<div>vacios: {grupos.vacios.length}</div>
-			<div>hasta segmentos: {grupos.segmentos.length}</div>
-			<div>hasta familias: {grupos.familias.length}</div>
-			<div>hasta clases: {grupos.clases.length}</div>
-			<div>clasificados: {grupos.productos.length}</div>
-		</div>
+	</div>
+</section>
+<section class="main">
+	<section class="filtros">
+		<FiltroArticulos bind:indexFilter {filters} {views} />
 	</section>
 	<section class="table">
-		{#each grupoActual as clasificacion, i}
-			<Articulo {clasificacion} onDelete={() => deleteArticle(i)} />
+		{#each grupoActual as clasificacion (clasificacion.articulo.id)}
+			<Articulo
+				{clasificacion}
+				onDelete={() => deleteArticle(clasificacion.articulo.id)}
+			/>
 		{/each}
 	</section>
 	<section></section>
 </section>
 
 <style>
-	.resumen {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--size-l);
-	}
 	.main {
 		display: flex;
 		flex-direction: column;
@@ -118,31 +115,66 @@
 		padding: var(--size-m);
 	}
 	.filtros {
-		border: 2px 2px black solid;
+		position: sticky;
+		top: var(--size-s);
+		padding: var(--size-s);
+		border-radius: var(--size-l);
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: space-between;
-	}
-	.filtros > .left {
-		display: flex;
-		gap: var(--size-s);
-	}
-	.filtros > .right {
-		display: flex;
+		z-index: 2;
+		background-color: oklch(1 0 0 / 0.5);
+		box-shadow:
+			1px 2px 6px 2px oklch(0.7 0 0 / 0.3),
+			0 0 6px 4px oklch(1 0 0 / 0.5) inset;
+		backdrop-filter: blur(var(--size-s));
 	}
 	.table {
 		display: flex;
 		flex-direction: column;
 		gap: var(--size-l);
+		height: 90vh;
+		overflow: hidden scroll;
 	}
 	.file {
 		display: flex;
 		align-items: center;
+	}
+	.selector {
+		margin-inline: var(--size-m);
 		padding: var(--size-m);
-		input {
-			width: 0;
-			height: 0;
-			overflow: hidden;
+		border-radius: var(--size-m);
+		border: solid;
+		border-width: var(--border-l);
+		border-color: var(--border-color-auto);
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-m);
+		.top {
+			display: flex;
+			row-gap: var(--size-m);
+		}
+		.carga {
+			display: flex;
+			flex-wrap: wrap;
+			gap: var(--size-s);
+			& > * {
+				flex-grow: 1;
+			}
+		}
+	}
+
+	:global(html.mobile) {
+		.selector {
+			.top {
+				flex-direction: column-reverse;
+			}
+		}
+	}
+	.contexto{
+		label{
+			display: flex;
+			gap: var(--size-s);
 		}
 	}
 </style>

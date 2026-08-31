@@ -4,14 +4,23 @@ import { Clase } from "./models/Clase";
 import { Familia } from "./models/Familia";
 import { Producto } from "./models/Producto";
 import { Segmento } from "./models/Segmento";
+import type { IAgrupacion } from "./interfaces/IAgrupacion";
+import { API } from "./utils/fetchUtils";
 
-export function agruparFaltantes(list: Clasificacion[]) {
-	const segmentos: Clasificacion[] = [];
-	const familias: Clasificacion[] = [];
-	const clases: Clasificacion[] = [];
-	const productos: Clasificacion[] = [];
-	const vacios: Clasificacion[] = [];
-	list.forEach((cls) => {
+export function agruparFaltantes(
+	map: Record<string, Clasificacion>,
+	orden: Set<string>,
+): IAgrupacion {
+	const segmentos = new Set<Clasificacion>();
+	const familias = new Set<Clasificacion>();
+	const clases = new Set<Clasificacion>();
+	const productos = new Set<Clasificacion>();
+	const vacios = new Set<Clasificacion>();
+	const sinDescripcion = new Set<Clasificacion>();
+	orden.forEach((id) => {
+		if (!map?.[id]) return;
+		const cls = map[id] as Clasificacion;
+		if (cls.articulo.descripcion === "") sinDescripcion.add(cls);
 		const grupo =
 			cls.producto.eleccion instanceof Producto
 				? productos
@@ -22,9 +31,10 @@ export function agruparFaltantes(list: Clasificacion[]) {
 						: cls.segmento.eleccion instanceof Segmento
 							? segmentos
 							: vacios;
-		grupo.push(cls);
+		grupo.add(cls);
 	});
 	return {
+		sinDescripcion,
 		segmentos,
 		familias,
 		clases,
@@ -59,7 +69,6 @@ export function getTestArticles() {
 			articulo: {
 				id: "adwa",
 				nombre: "Pollo a la brasa",
-				descripcion: "nose que poner aa aaaa",
 			},
 			segmento: {
 				motivo: "porque esta muy bonito",
@@ -76,20 +85,83 @@ export function getTestArticles() {
 				eleccion: new Producto("", "producto"),
 			},
 		},
-		{
-			articulo: {
-				id: "adwa2",
-				nombre: "Tallarin saltado",
-				descripcion: "nose que poner aa aaaa",
-			},
-			segmento: {
-				motivo: "porque esta muy bonito",
-				confianza: 0.9,
-				eleccion: new Segmento("500000", "segmento", []),
-			},
-			familia: {},
-			clase: {},
-			producto: {},
-		},
+		...new Array(20).fill(null).map(() => {
+			const min = 1;
+			const max = 200;
+			return {
+				articulo: {
+					id: "test-" + String(Math.floor(Math.random() * (max - min + 1))),
+					nombre: "Tallarin saltado",
+					descripcion: "nose que poner aa aaaa",
+				},
+				segmento: {
+					motivo: "porque esta muy bonito",
+					confianza: 0.9,
+					eleccion: new Segmento("500000", "segmento", []),
+				},
+				familia: {},
+				clase: {},
+				producto: {},
+			};
+		}),
 	];
+}
+
+export async function cargarArticulosDeExcel(
+	e: Event,
+): Promise<Clasificacion[]> {
+	const datos = await cargarExcel(e);
+	return datos
+		.filter((row) => !row?.id || !row?.nombre)
+		.map((row) => {
+			const { id, nombre, descripcion, segmento, familia, clase, producto } =
+				row;
+			const clasificacion: Clasificacion = {
+				articulo: {
+					id,
+					nombre,
+					descripcion,
+				},
+				segmento: {},
+				familia: {},
+				clase: {},
+				producto: {},
+			};
+			if (segmento)
+				clasificacion.segmento = {
+					confianza: 1,
+					eleccion: new Segmento(String(row.segmento), "segmento", []),
+				};
+			if (familia)
+				clasificacion.familia = {
+					confianza: 1,
+					eleccion: new Familia(String(row.familia), "familia", []),
+				};
+			if (clase)
+				clasificacion.clase = {
+					confianza: 1,
+					eleccion: new Clase(String(row.clase), "clase", []),
+				};
+			if (producto)
+				clasificacion.producto = {
+					confianza: 1,
+					eleccion: new Producto(String(row.producto), "producto"),
+				};
+			return clasificacion;
+		});
+}
+
+export async function generateDescription(
+	values: Clasificacion[],
+): Promise<Record<string, string>> {
+	const response = await API.descripcion.generate(
+		{
+			pais: "",
+			rubro: "",
+		},
+		values.map((e) => [e.articulo.id, e.articulo.nombre]),
+	);
+	const result = await response.json()
+	console.log(result)
+	return {};
 }

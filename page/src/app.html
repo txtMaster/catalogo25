@@ -5,6 +5,24 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
 		%sveltekit.head%
+		<script>
+			const isMobile = window.matchMedia("(max-width: 639px)");
+			const isTablet = window.matchMedia("(min-width: 640px)");
+			const isDesktop = window.matchMedia("(min-width: 1024px)");
+			const updateDevice = () => {
+				document.documentElement.className = isDesktop.matches
+					? "desktop"
+					: isTablet.matches
+						? "tablet"
+						: isMobile.matches
+							? "mobile"
+							: "";
+			};
+			updateDevice();
+			isMobile.addEventListener("change", updateDevice);
+			isTablet.addEventListener("change", updateDevice);
+			isDesktop.addEventListener("change", updateDevice);
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>

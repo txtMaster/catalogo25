@@ -1,0 +1,16 @@
+.hide {
+	width: 0 !important;
+	height: 0 !important;
+	overflow: hidden !important;
+}
+
+.link{
+	outline: none;
+	border: none;
+	text-decoration: underline;
+	text-underline-offset: .15rem;
+	text-align: start;
+	&::after{
+		content: "->";
+	}
+}

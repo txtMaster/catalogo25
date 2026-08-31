@@ -1,0 +1,42 @@
+.flex {
+	display: flex;
+	flex-direction: row;
+	&:not(:has(.col)) {
+		&.center {
+			justify-content: center;
+		}
+        &.between{
+            justify-content: space-between;
+        }
+	}
+	&.col {
+		flex-direction: column;
+		&.center {
+			align-items: center;
+		}
+	}
+	&.wrap {
+	}
+	.center {
+	}
+}
+
+.w-fit{
+	width: fit-content;
+}
+.h-fit{
+	height: fit-content;
+}
+.w-max{
+	width: max-content;
+}
+.w-min{
+	width: min-content;
+}
+.w-full{
+	width: 100%;
+}
+
+.grow{
+	flex-grow: 1;
+}
