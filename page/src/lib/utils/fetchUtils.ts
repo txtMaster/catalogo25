@@ -8,16 +8,22 @@ export type context = {
 
 export const API = {
 	descripcion: {
-		async generate(context: context, payload: Array<[string, string]>): Promise<Response> {
-			return fetch(API_URL + "/descripcion/generar", {
+		async generate(
+			context: context,
+			payload: Array<{
+				id: string;
+				nombre: string;
+			}>,
+		): Promise<Response> {
+			return fetch(API_URL + "/api/descripcion/generar", {
 				method: "POST",
-                headers:{
-                    "Content-Type":"application/json"
-                },
+				headers: {
+					"Content-Type": "application/json",
+				},
 				body: JSON.stringify({
 					clave: API_KEY,
-                    contexto:context,
-					articulos: payload,
+					contexto: context,
+					articulos: payload.map((e) => [e.id, e.nombre]),
 				}),
 			});
 		},

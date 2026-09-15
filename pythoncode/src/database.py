@@ -1,4 +1,5 @@
 import psycopg2
+import sqlite3
 
 def create_connection():
     return psycopg2.connect(
@@ -7,3 +8,6 @@ def create_connection():
         user="localuser",
         password="localuser"
     )
+    
+def create_connection_sqlite(uri:str):
+    return sqlite3.connect(uri)

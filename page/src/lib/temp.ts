@@ -159,7 +159,7 @@ export async function generateDescription(
 			pais: "",
 			rubro: "",
 		},
-		values.map((e) => [e.articulo.id, e.articulo.nombre]),
+		values.map(e=>e.articulo),
 	);
 	const result = await response.json()
 	console.log(result)

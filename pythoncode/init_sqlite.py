@@ -3,7 +3,10 @@ import os
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import execute_values
-from src.database import create_connection
+from src.database import create_connection_sqlite
+
+def create_connection():
+    return create_connection_sqlite(os.getenv("SQLITE_FILE",""))
 
 load_dotenv()
 
@@ -19,12 +22,12 @@ cur = conn.cursor()
 
 query = """
 INSERT INTO segmento (id,descripcion)
-VALUES %s
+VALUES (?,?)
 """
 datos = list(sub_df[["ID SEGMENTO","SEGMENTO"]].itertuples(index=False, name=None))
 
 try: 
-    execute_values(cur,query,datos)
+    cur.executemany(query,datos)
     conn.commit()
 except Exception as e: print(e)
 
@@ -40,12 +43,12 @@ cur = conn.cursor()
 
 query = """
 INSERT INTO familia (id,segmento_id,descripcion)
-VALUES %s
+VALUES (?,?,?)
 """
 datos = list(sub_df[["ID FAMILIA","ID SEGMENTO","FAMILIA"]].itertuples(index=False, name=None))
 
 try: 
-    execute_values(cur,query,datos)
+    cur.executemany(query,datos)
     conn.commit()
 except Exception as e: print(e)
 
@@ -61,12 +64,12 @@ cur = conn.cursor()
 
 query = """
 INSERT INTO clase (id,familia_id,descripcion)
-VALUES %s
+VALUES (?,?,?)
 """
 datos = list(sub_df[["ID CLASE","ID FAMILIA","CLASE"]].itertuples(index=False, name=None))
 
 try:
-    execute_values(cur,query,datos)
+    cur.executemany(query,datos)
     conn.commit()
 except Exception as e: print(e)
 
@@ -82,12 +85,12 @@ cur = conn.cursor()
 
 query = """
 INSERT INTO producto (id,clase_id,descripcion)
-VALUES %s
+VALUES (?,?,?)
 """
 datos = list(sub_df[["ID PRODUCTO","ID CLASE","PRODUCTO"]].itertuples(index=False, name=None))
 
 try:
-    execute_values(cur,query,datos)
+    cur.executemany(query,datos)
     conn.commit()
 except Exception as e: print(e)
 

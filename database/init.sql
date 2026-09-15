@@ -22,11 +22,11 @@ CREATE TABLE catalogo25 (
 );
 */
 
-CREATE table segmento(
+CREATE table if not exists segmento(
     id VARCHAR(20) PRIMARY KEY,
     descripcion VARCHAR(500) NOT NULL
 );
-CREATE table familia(
+CREATE table if not exists familia(
     id VARCHAR(20) PRIMARY KEY,
     segmento_id VARCHAR(20) NOT NULL,
     descripcion VARCHAR(500) NOT null,
@@ -34,16 +34,16 @@ CREATE table familia(
     	references segmento(id)
     	on delete cascade
 );
-CREATE table clase(
+CREATE table if not exists clase(
     id VARCHAR(20) PRIMARY KEY,
-    familia_id VARCHAR(20), NOT NULL,
+    familia_id VARCHAR(20) NOT NULL,
     descripcion VARCHAR(500) NOT null,
     constraint fk_clase_familia foreign key (familia_id)
     	references familia(id)
     	on delete cascade
 );
 
-CREATE table producto(
+CREATE table if not exists producto(
     id VARCHAR(20) PRIMARY KEY,
     clase_id VARCHAR(20) NOT NULL,
     descripcion VARCHAR(500) NOT NULL,

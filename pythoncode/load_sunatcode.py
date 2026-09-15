@@ -25,7 +25,7 @@ capa2_familias:dict[str,Capa[Familia]] = {}
 capa3_clases:dict[str,Capa[Clase]] = {}
 capa4_productos:dict[str,Capa[Articulo]] = {}
 
-catalogo: dict[str,list[Familia]] = []
+catalogo: dict[str,list[Familia]] = {}
 
 capa0_inputs = [
     Articulo("adajk","coca cola 1/2"),
